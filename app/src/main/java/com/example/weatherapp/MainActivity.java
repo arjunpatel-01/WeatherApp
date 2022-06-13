@@ -119,15 +119,22 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
+    /**
+     * grabs weather data from openweathermap by making an api call to obtain coordinates
+     * and an api call to obtain weather data at the location marked by the coordinates
+     * @param cityName user-inputted String that indicates which city's weather should be displayed
+     * @throws ExecutionException
+     * @throws InterruptedException
+     */
     public void getWeatherData (String cityName) throws ExecutionException, InterruptedException {
 
         //creates a volley queue to process the string requests
         RequestQueue requestQueue = Volley.newRequestQueue(MainActivity.this);
 
-        //uses the input city (city name) to find its latitude and longitude coordiates for the later onecall request
-        //updates the longitude and latitude globals
+        //uses the input city (city name) to build api url
         String geo_url = "https://api.openweathermap.org/geo/1.0/direct?appid=f79799ec1cafaac7263de4eb24618fb6" + "&q=" + cityName + "&limit=1";
 
+        //updates the longitude and latitude globals then performs the onecall api call
         StringRequest coordinateFind = new StringRequest(Request.Method.GET, geo_url, geoResponse -> {
             try {
                 JSONArray jsonResponse = new JSONArray(geoResponse);
@@ -246,134 +253,4 @@ public class MainActivity extends AppCompatActivity {
 
         requestQueue.add(coordinateFind);
     }
-
-    /**
-     * Uses input city name (obtained from text field input)
-     * to make an api call to get longitude and latitude
-     *
-     * @param cityName a string that specifies a valid city name
-     */
-//    public StringRequest getlatandlon (String cityName, RequestQueue requestQueue) {
-//
-//        String geo_url = "https://api.openweathermap.org/geo/1.0/direct?appid=f79799ec1cafaac7263de4eb24618fb6" + "&q=" + cityName + "&limit=1";
-//
-//        StringRequest coordinateFind = new StringRequest(Request.Method.GET, geo_url, geoResponse -> {
-//            try {
-//                JSONArray jsonResponse = new JSONArray(geoResponse);
-//                JSONObject jsonChooseLocation = jsonResponse.getJSONObject(0);
-//                String name = jsonChooseLocation.getString("name");
-//                String country = jsonChooseLocation.getString("country");
-//                String state = "";
-//                if ("US".equals(country)) {
-//                    state = jsonChooseLocation.getString("state");
-//                    name = name + ", " + state;
-//                }
-//                name = name + ", " + country;
-//                CityNameTitle.setText(name);
-//                double lat = jsonChooseLocation.getDouble("lat");
-//                double lon = jsonChooseLocation.getDouble("lon");
-//                String onecall_url = "https://api.openweathermap.org/data/2.5/onecall?appid=f79799ec1cafaac7263de4eb24618fb6"
-//                        + "&lat=" + lat
-//                        + "&lon=" + lon
-//                        + "&exclude=minutely,alerts"
-//                        + "&units=imperial";
-//
-//                StringRequest weatherFind = new StringRequest(Request.Method.GET, onecall_url, weatherResponse -> {
-//                    HomePage.setVisibility(View.VISIBLE);
-//                    HourlyWeather.clear();
-//                    DailyWeather.clear();
-//
-//                    try {
-//                        //grabs a JSON object from the response
-//                        JSONObject jsonResponse2 = new JSONObject(weatherResponse);
-//                        DecimalFormat df = new DecimalFormat("###.#");
-//
-//                        //grabs the timezone offset from the JSON object (since the time is given in unix UTC
-//                        timezone_offset = jsonResponse2.getLong("timezone_offset");
-//
-//                        /*
-//                         * gets current weather data
-//                         * (i.e., temperature, humidity, wind speed, pressure, and condition image)
-//                         */
-//                        JSONObject jsonCurrent = jsonResponse2.getJSONObject("current");
-//                        int ctemp = (int) jsonCurrent.getDouble("temp");
-//                        String current_temp = String.valueOf(ctemp);
-//                        CurrentTemperature.setText(current_temp + "°F");
-//
-//                        double chumidity = jsonCurrent.getDouble("humidity");
-//                        String current_humidity = String.valueOf(chumidity);
-//                        Humidity.setText("Humidity: " + current_humidity + "%");
-//
-//                        double cwindspeed = jsonCurrent.getDouble("wind_speed");
-//                        String current_windspeed = String.valueOf(cwindspeed);
-//                        WindSpeed.setText("Wind: " + current_windspeed + " mph");
-//
-//                        double cpressure = jsonCurrent.getDouble("pressure");
-//                        String current_pressure = String.valueOf(cpressure);
-//                        Pressure.setText("Pressure: " + current_pressure + " hPa");
-//
-//                        String conditionIconCode = jsonCurrent.getJSONArray("weather").getJSONObject(0).getString("icon");
-//                        String conditionIconUrl = "https://openweathermap.org/img/wn/" + conditionIconCode + "@2x.png";
-//                        Picasso.get().load(conditionIconUrl).into(ConditionImage);
-//
-//                        /*
-//                         * gets hourly weather data (24 hours)
-//                         * (i.e., time, temperature, percent of precipitation, and condition icon)
-//                         */
-//                        JSONArray jsonHourly = jsonResponse2.getJSONArray("hourly");
-//                        for (int i = 1; i < 24; i++){
-//                            JSONObject jsonHourData = jsonHourly.getJSONObject(i);
-//                            long hourly_time = jsonHourData.getLong("dt");  //removed timeoffset
-//                            int htemp = (int) jsonHourData.getDouble("temp");
-//                            double hprecip = jsonHourData.getDouble("pop");
-//
-//                            String hourly_temp = String.valueOf(htemp);
-//                            hourly_temp += " °F";
-//                            String himgcode = jsonHourData.getJSONArray("weather").getJSONObject(0).getString("icon");
-//                            String hourly_image = "https://openweathermap.org/img/wn/" + himgcode + "@2x.png";
-//                            String hourly_precip = df.format(hprecip*100) + "% rain";
-//
-//                            //adds a scrollable view card for each hour data
-//                            HourlyWeather.add(new WeatherScrollableDetails(hourly_time, hourly_temp, hourly_image, hourly_precip, timezone_offset, HOURMODE));
-//                        }
-//                        WeatherHourlyScrollView.notifyDataSetChanged();
-//
-//                        /*
-//                         * gets daily weather data (7 days)
-//                         * (i.e., day, high and low temperature, percent of precipitation, and conition icon)
-//                         */
-//                        JSONArray jsonDaily = jsonResponse2.getJSONArray("daily");
-//                        for (int i = 1; i < jsonDaily.length(); i++){
-//                            JSONObject jsonDayData = jsonDaily.getJSONObject(i);
-//                            long daily_time = jsonDayData.getLong("dt");
-//                            int dlotemp = (int) jsonDayData.getJSONObject("temp").getDouble("min");
-//                            int dhitemp = (int) jsonDayData.getJSONObject("temp").getDouble("max");
-//                            double dprecip = jsonDayData.getDouble("pop");
-//
-//                            String daily_lo_temp = String.valueOf(dlotemp);
-//                            String daily_hi_temp = String.valueOf(dhitemp);
-//                            String daily_temps = daily_hi_temp + "↑ " + daily_lo_temp + "↓" + " °F";
-//                            String dimgcode = jsonDayData.getJSONArray("weather").getJSONObject(0).getString("icon");
-//                            String daily_image = "https://openweathermap.org/img/wn/" + dimgcode + "@2x.png";
-//                            String daily_precip = df.format(dprecip*100) + "% rain";
-//
-//                            //adds scrollable view card for each hour data
-//                            DailyWeather.add(new WeatherScrollableDetails(daily_time, daily_temps, daily_image, daily_precip, timezone_offset, DAYMODE));
-//                        }
-//                        WeatherDailyScrollView.notifyDataSetChanged();
-//
-//                    } catch (JSONException e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                }, error -> Toast.makeText(MainActivity.this, error.toString(), Toast.LENGTH_SHORT).show());
-//                requestQueue.add(weatherFind);
-//            } catch (JSONException e) {
-//                e.printStackTrace();
-//            }
-//        }, error -> Toast.makeText(MainActivity.this, error.toString().trim(), Toast.LENGTH_SHORT).show());
-//
-//
-//        return coordinateFind;
-//    }
 }
